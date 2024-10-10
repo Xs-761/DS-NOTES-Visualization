@@ -2,4 +2,139 @@
 title: "Visualization"
 output: github_document
 ---
-test
+
+# load packages
+```{r, message=FALSE}
+library(tidyverse)
+library(ggridges)
+```
+
+# load the weather data
+```{r}
+weather_df = c()
+```
+
+# ggplot
+```{r}
+ggplot(weather_df, aes(x=tmin, y=tmax)) +  # Define the dataset used; Define the axies
+  geom_point()
+# New Approach Same Plot
+weather_df %>%
+  ggplot(aes(x=tmin, y=tmax)) + geom_point()
+```
+
+# Save and Edit a plot object
+```{r}
+weather_plot = 
+    weather_df %>%
+    ggplot(aes(x=tmin, y=tmax))
+
+weather_plot + geom_point()
+```
+
+## Advanced Scatterplot
+
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, y=tmax, color=name)) + 
+    geom_point() +
+    geom_smooth(se=FALSE)   # Add Smooth Curves around the groups of data to help visualize the trends in separate groups
+```
+
+# What about the 'aes' placement?
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, y=tmax)) + 
+    geom_point(aes(color=name)) +
+    geom_smooth()
+```
+
+# Let's facet some things!
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, y=tmax, color=name)) + 
+    geom_point(alpha=.2) + # transparency of the point
+    geom_smooth() +
+    facet_grid(. ~ name)   # separate panels by different names
+                           # 如果用 facet_grid(name ~ .) 则会横向排布
+```
+
+Let's combine some elements and try a new plot.
+```{r}
+weather_df %>%
+    ggplot(aes(x=date, y=tmax, color=name)) + 
+    geom_point(aes(size=prcp), alpha=.5) +   # adjust the point sizes according to prcp values (can change transparency accordingly too)
+    geom_smooth(se=FALSE) +
+    facet_grid( . ~ name )
+```
+
+## Some small notes
+
+How many geoms have to exist?
+
+```{r}
+# You can have whatever geoms you want(might not be useful but applicable)
+weather_df %>%
+    ggplot(aes(x=tmin, y=tmax, color=name)) +
+    geom_smooth(se=FALSE)
+```
+
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, y=tmax)) +
+    geom_hex()    # different styles
+```
+
+## Univariate Plot
+```{r}
+# Histograms are really great.
+
+weather_df %>%
+    ggplot(aes(x=tmin, color=name)) + # 边框色
+    geom_histogram()
+
+weather_df %>%
+    ggplot(aes(x=tmin, fill=name)) +  # 填充色
+    geom_histogram()
+
+weather_df %>%
+    ggplot(aes(x=tmin, color=name)) +
+    geom_histogram() +
+    facet_grid( . ~ name )
+
+weather_df %>%
+    ggplot(aes(x=tmin, color=name)) +
+    geom_histogram(position="dodge")
+
+weather_df %>%
+    ggplot(aes(x=tmin, color=name)) +
+    geom_density(alpha=.3)  # "smoothed out a little bit"
+```
+
+What about boxplots?
+```{r}
+weather_df %>%
+    ggplot(aes(y=tmin)) +
+    geom_boxplot()
+
+weather_df %>%
+    ggplot(aes(x=name, y=tmin)) +  # 在x轴会显示所有name category的箱线图
+    geom_boxplot()
+
+```
+
+Trendy Plots
+```{r}
+weather %>%
+    ggplot(aes(x=name, y=tmin, fill=name)) +
+    geom_violin(alpha=.5) # a little bit more easier to understand straightforwardly the skewness and distributions
+    stat_summary(fun="median")
+```
+
+Ridge Plots --- the most popular plot of 2017
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin,y=name)) +
+    geom_density_ridges()
+```
+
