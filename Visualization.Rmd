@@ -3,10 +3,33 @@ title: "Visualization"
 output: github_document
 ---
 
+# What makes a good graph?
+
+  - Be clear on intent
+  - The right graph creates an "aha" moment
+  - Dont overcomplicate
+  - Get rid of the non-essential
+  - Make it clear where to look
+  - Words make a graph accessible
+  - Audience trumps all else
+  
+# Using ggplot
+  - Basic Graph Components\
+    - Data, Aesthetic Mappings, Geoms
+  - Advanced Graph Components
+    - Facets, Statistics, Scales
+  - A graph is built by combining these components
+  - Graphics can be further customized, depending on the goals
+    - Axis labels, axis tick locations/labels, font sizes, graphs themes, color scales, combining panels
+    
+# Where does visualization lies within the data processing phases?
+  Import --> Tidy --> (Transform->Visualize->Model) --> Convey
+
 # load packages
 ```{r, message=FALSE}
 library(tidyverse)
 library(ggridges)
+library(patchwork)
 ```
 
 # load the weather data
@@ -157,4 +180,15 @@ weather_plot
 
 ```
 
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, t=tmax, color=name)) +
+    geom_point(alpha=.5)
+    labs(
+        title = "Temperature Plot",
+        x = "Minimum daily temperature",
+        y = "Maximum daily temperature",
+        caption = "Data from RNOAA package: temperatures in 2017"
+    )
+```
 
