@@ -78,7 +78,7 @@ weather_df %>%
     ggplot(aes(x=tmin, y=tmax, color=name)) + 
     geom_point(alpha=.2) + # transparency of the point
     geom_smooth() +
-    facet_grid(. ~ name)   # separate panels by different names
+    facet_grid(. ~ name)   # separate panels ACCORDING TO different names
                            # 如果用 facet_grid(name ~ .) 则会横向排布
 ```
 
@@ -191,4 +191,192 @@ weather_df %>%
         caption = "Data from RNOAA package: temperatures in 2017"
     )
 ```
+
+# Scales
+
+Start with the same plot
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, t=tmax, color=name)) +
+    geom_point(alpha=.5)
+    labs(
+        title = "Temperature Plot",
+        x = "Minimum daily temperature",
+        y = "Maximum daily temperature",
+        caption = "Data from RNOAA package: temperatures in 2017"
+    ) +
+    scale_x_continuous(
+      breaks = c(-15, 0, 15),   # x轴分割为 -15, 0, 15三点
+      labels = c("-15 C", "0", "15") # 标注分别的notes
+    ) +
+    scale_y_contiunous(
+      position = "right"  #可以把y轴放在右侧
+    ) +
+    scale_color_hue(name="location", h=c(100, 200))
+```
+
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, t=tmax, color=name)) +
+    geom_point(alpha=.5)
+    labs(
+        title = "Temperature Plot",
+        x = "Minimum daily temperature",
+        y = "Maximum daily temperature",
+        caption = "Data from RNOAA package: temperatures in 2017"
+    ) +
+    viridis::scale_color_viridis(
+        name = "Location",
+        discrete = TRUE
+    )
+```
+
+# Themes
+
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, t=tmax, color=name)) +
+    geom_point(alpha=.5)
+    labs(
+        title = "Temperature Plot",
+        x = "Minimum daily temperature",
+        y = "Maximum daily temperature",
+        caption = "Data from RNOAA package: temperatures in 2017"
+    ) +
+    theme(legend.position="bottom")  # shift the legends to the bottom
+```
+
+change the global theme
+```{r}
+# by default the background is gray but you can change it
+weather_df %>%
+    ggplot(aes(x=tmin, t=tmax, color=name)) +
+    geom_point(alpha=.5)
+    labs(
+        title = "Temperature Plot",
+        x = "Minimum daily temperature",
+        y = "Maximum daily temperature",
+        caption = "Data from RNOAA package: temperatures in 2017"
+    ) +
+    theme_light()   # you can use ggtheme package to display more themes
+                    # 这个theme挺好看的可以stick to it
+```
+
+## Setting Options
+```{r}
+library(tidyverse)
+theme_set(theme_light() + theme(legend.position = "bottom"))
+
+knitr:: opts_chunk$set(
+  fig.width=6,
+  fig.asp=.6,
+  out.width = "90%"
+)
+
+options(
+    ggplot2.continuous.colour="viridis",
+    ggplot2.continous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+```
+
+# Data Args in 'geom'
+```{r}
+central_park = 
+    weather_df %>%
+    filter(name=="CentralPark_NY")
+
+waikiki = 
+    weather_df %>%
+    filter(name=="Waikiki_HA")
+
+ggplot(data=waikiki, aes(x=date, y=tmax, color=name)) +
+    geom_point() +
+    geom_line(data=central_park)
+```
+
+# patchwork
+```{r}
+weather_df %>%
+    ggplot(aes(x=tmin, fill=name)) + 
+    geom_density(alpha=.5) + 
+    facet_grid(.~name)
+
+# what happens when you want multipanel plots ut can't facet?
+
+weather_df %>%
+    ggplot(aes(x=tmin, y=tmax, color=name)) +
+    geom_pint(alpha=.5) +
+    theme(legend.position = "none")
+
+prcp_dens_p =
+    weather_df %>%
+    filter(prcp>0) %>%
+    ggplot(aes(x=prcp, fill=name)) +
+    geom_density(alpha=.5)
+
+tmax_date_p =
+    weather_df %>%
+    ggplot(aes(x=date, y=tmax, color=name)) + 
+    geom_point() +
+    geom_smooth(SE=FALSE) +
+    theme(legend.position="none")
+
+tmax_date_p + prcp_dens_p + tmax_date_p # combine and arrange panels using patchwork
+tmax_date_p + (prcp_dens_p + tmax_date_p) # 后两个占用一个panel空间
+tmax_date_p / prcp_dens_p + tmax_date_p # 上下分隔
+
+```
+
+# Data Manipulation
+```{r}
+
+# change the order?
+
+## CONTROL YOUR FACTORS
+
+weather_df %>%
+    mutate(
+      name=factor(name), # changed name column to factor type
+      name = forcats::fct_relevel(name, c("Waikiki_HA"))
+    )
+    ggplot(aes(x=name, y=tmax, color=name)) +
+    geom_violin(alpha=.5)
+    
+# What if I wanted densities for tmin and tmax simultaneously?
+weather_df %>%
+    filter(name=="CentralPark_NY") %>%
+    pivor_longer(
+        tmax::tmin,
+        names_to = "observation",
+        values_to = "temperatures"
+    ) %>%
+    ggplot(aes(x=temperatures, fill=observation)) +
+    geom_density(alpha=.5) +
+    facet_grid(.~name)
+    
+```
+
+
+# Revisit the pups
+```{r}
+pup_data = 
+    read_csv("") %>%
+    janitor::clean_names() %>%
+    mutate(sex=recode(sex, `1`="male", `2`="female"))
+
+litters_data =
+    read_csv("") %>%
+    janitor::clean_names() %>%
+    separate(group, into=c("dose", "day_of_tx"),sep=3)
+
+fas_data=left_join(pup_data, litters_data, by="litter_number")
+
+
+
+```
+
 
